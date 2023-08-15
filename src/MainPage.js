@@ -105,7 +105,7 @@ function MainPage() {
         <Box p={4} borderRadius="lg" boxShadow="md" bg="green.700">
           <Flex justify="space-between" align="center" mb={4}>
             <Text fontSize="xl" fontWeight="bold" color="white">
-              QRSoft Inventory Planner
+              QSRSoft Inventory Planner
             </Text>
             <Flex>
               <Button colorScheme="white" mr={2}>
