@@ -1,9 +1,15 @@
 from flask import Flask, request
+from flask_cors import CORS, cross_origin
 import torch
 import torch.nn as nn
+from math import sqrt
+import datetime
 
 app = Flask(__name__)
+CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
+# Model class, copied over from the notebook file
 class SVM(nn.Module):
     def __init__(self, input_size, output_size, hidden_size=1):
         super(SVM, self).__init__()
@@ -13,7 +19,8 @@ class SVM(nn.Module):
         x, _ = self.gnu(x)
         x = self.first(x)
         return x
-    
+
+# Mapping of month to customer traffic
 months = {
     0: 0.95,
     1: 0.25,
@@ -29,17 +36,42 @@ months = {
     11: 0.49
 }
 
+# Mapping of item_id to base_price
+item_list = {
+    1: 2,
+    2: 4,
+    3: 10,
+    4: 20,
+    5: 40,
+    6: 60
+}
+
+with open("locations.txt") as f:
+    lines = f.readlines()
+    locations = [eval(line) for line in lines]
+
+k = SVM(4, 1, 100)
+model_state_dict = torch.load('./model.pth')
+k.load_state_dict(model_state_dict)
+
+curr_time = datetime.date(2023, 8, 15) #curr_time maps to week 520
+
 @app.route("/inventory")
+@cross_origin()
 def hello():
     args = request.args
-    location_id = int(args.get("location_id"))
+    lat = int(args.get("lat"))
+    lon = int(args.get("lon"))
+
+    location_finder = [sqrt(pow(stored_lat - lat, 2) + pow(stored_lon - lon, 2)) \
+                        for stored_lat, stored_lon in locations]
+    location_id = location_finder.index(min(location_finder))
     item_id = int(args.get("item_id"))
-    week = int(args.get("week"))
-    month = int(args.get("month"))
-    k = SVM(4, 1, 100)
-    model_state_dict = torch.load('./model.pth')
-    k.load_state_dict(model_state_dict)
-    x = torch.tensor([[  location_id, item_id, week, months[month]]])
+    date = datetime.datetime.strptime(args.get("date"), '%Y-%m-%d').date()
+    delta = curr_time - date
+    week_num = 520 - delta.days / 7
+
+    x = torch.tensor([[  location_id, item_id, week_num, date.month]])
     k.eval()
 
     # De-normalize the output, as the output is standardized
