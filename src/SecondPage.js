@@ -6,7 +6,6 @@ function SecondPage() {
     <ChakraProvider>
       <Center h="100vh">
         <Box display="flex">
-          {/* <img src="logo.png" alt="Logo" width="100px" height="100px" /> */}
           <Box bg="rgba(255, 255, 255, 0.7)" p={4} borderRadius="md" boxShadow="md">
             <Text fontSize="xl" fontWeight="bold">Your Recommendations</Text>
             <Table mt={4} variant="simple">
